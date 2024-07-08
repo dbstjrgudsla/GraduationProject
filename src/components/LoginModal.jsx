@@ -1,29 +1,52 @@
+// LoginModal.js
+
 import { ReactComponent as MainLogo } from '../img/MainLogo.svg';
 import '../styles/LoginModal.css';
 import { AiOutlineClose } from "react-icons/ai";
 import GoogleLogin from "./GoogleLogin";
 import KakaoLogin from "./KakaoLogin";
 import AppleLogin from "./AppleLogin";
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router';
+import { useEffect} from 'react';
 
 const LoginModal = ({ isOpen, onClose }) => {
   const navigate = useNavigate();
 
-  const handleLoginSuccess = (responseData) => {
-    // 받은 데이터를 로컬 스토리지에 저장합니다.
-    localStorage.setItem('accessToken', responseData.data.accessToken);
-    localStorage.setItem('refreshToken', responseData.data.refreshToken);
-    localStorage.setItem('isGuest', responseData.data.isGuest);
+  const handleLoginSuccess = (data) => {
+    console.log('Login Success Data:', data);
+    const { accessToken, refreshToken, isGuest } = data;
 
-    // 이제 사용자가 게스트인지 확인하여 다음 페이지로 라우팅하면 됩니다.
-    if (responseData.data.isGuest) {
-      // 게스트라면 terms 페이지로 이동
+    localStorage.setItem('accessToken', accessToken);
+    localStorage.setItem('refreshToken', refreshToken);
+    localStorage.setItem('isGuest', isGuest);
+
+    if (isGuest === 'true') {
       navigate('/terms');
     } else {
-      // 게스트가 아니라면 홈 페이지로 이동
-      navigate('/');
+      navigate('/home');
     }
   };
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const accessToken = params.get('accessToken');
+    const refreshToken = params.get('refreshToken');
+    const isGuest = params.get('isGuest');
+
+    if (accessToken && refreshToken && isGuest !== null) {
+      localStorage.setItem('accessToken', accessToken);
+      localStorage.setItem('refreshToken', refreshToken);
+      localStorage.setItem('isGuest', isGuest);
+
+      console.log('Stored Tokens:', { accessToken, refreshToken, isGuest });
+
+      if (isGuest === 'true') {
+        navigate('/terms');
+      } else {
+        navigate('/home');
+      }
+    }
+  }, [navigate]);
 
   return (
     <>
@@ -40,7 +63,7 @@ const LoginModal = ({ isOpen, onClose }) => {
               <div className="SocialLogin">
                 <AppleLogin onSuccess={handleLoginSuccess} />
                 <KakaoLogin onSuccess={handleLoginSuccess} />
-                <GoogleLogin onSuccess={handleLoginSuccess} />
+                <GoogleLogin  />
               </div>
               <div className="Policy">
                 이용약관   &nbsp; |  &nbsp; 개인정보처리방침
